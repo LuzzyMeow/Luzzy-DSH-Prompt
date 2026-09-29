@@ -1,0 +1,12 @@
+{
+  "name": "@local/dsh-luzzy-preset",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "鹿溪（Luzzy）DSH agent preset bundle：人设来自仓库根目录的 PROMPT.md。",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
