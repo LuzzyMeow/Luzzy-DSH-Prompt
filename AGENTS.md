@@ -124,6 +124,34 @@ plugin_manager · action: install_bundle · target: <本仓库 preset/ 的绝对
 
 要改工具集：只动 `preset/tools.patch.yml`，然后重跑 `build-preset.mjs`。增删后的行必须保持 **10 空格**缩进（`config.plugins` 的下级），平台条件沿用官方写法 `!!js process.platform === 'win32'`。
 
+### 移动或更名本仓库目录（会让已安装的预设断链）
+
+预设不是被复制进 profile 的，而是以 `link:`（Windows 上落成 **junction**）挂进去的——**安装源必须原地存在**。目录一移动，junction 指向空路径，插件页立刻报：
+
+```text
+插件元信息错误: Plugin metadata for @local/dsh-luzzy-preset:
+Error: <旧路径>\package.json: ENOENT: no such file or directory
+```
+
+正确顺序（缺一不可）：
+
+1. **先卸载**：`plugin_manager` `remove_bundle`，target `@local/dsh-luzzy-preset`（别先移动，否则中途留一个悬空链接）；
+2. **再移动 / 更名目录**——整个工作副本移动不影响仓库本身，remote、历史、`.git` 都跟着走；
+3. **从新路径重装**：`install_bundle`，target `<新绝对路径>/preset`；
+4. **核验持久状态已换新**（旧路径不该再出现在这两处）：
+
+```powershell
+$p = $env:DSH_PROFILE_DIR
+Select-String -Path "$p\package.json","$p\pnpm-lock.yaml" -Pattern '<旧路径片段>'   # 期望：无输出
+Get-Item "$p\node_modules\@local\dsh-luzzy-preset" -Force | Select-Object LinkType,Target
+```
+
+5. **刷新界面**：插件页会把"移动那一刻"的失败信息缓存住——Host 已经恢复正常，页面上照样是红的。
+
+**判据：别被界面上的旧报错带偏。** 报错里的路径**已经不存在**，同时 `list_bundles` 正常（`installed: true`）、junction 指向新路径 → 那是界面残留，**不是安装失败**，刷新页面（F5）即可清掉，仍在就重启 DSH Desktop。反过来，若 `list_bundles` 里没有这个 bundle、或 `preset-luzzy` 行没激活，才是真装坏了——回到本节开头重装。
+
+> 历史日志（`.plugin-manager/logs/*/pnpm.log`）里必然会留着旧路径的加减记录，那是操作流水，不用清、也别拿它判断当前状态；**当前状态只看 `package.json` / `pnpm-lock.yaml` / junction 指向 / `list_bundles`**。
+
 ---
 
 ## 四、禁忌与坑（都踩过）
@@ -135,6 +163,8 @@ plugin_manager · action: install_bundle · target: <本仓库 preset/ 的绝对
 | CRLF 行尾 | 逐字节回验在第 1 行就失败 | 全仓库 LF（`.gitattributes` 钉 `eol=lf`）；脚本仍会兜底规整并告警 |
 | 重复 `config.id` | 声明加载失败，预设不进名册 | 加预设前先确认 id 未被占用 |
 | 改了预设就在当前会话里试 | 老会话不会更新，白白怀疑改动无效 | 开新会话验证 |
+| **直接移动 / 更名仓库目录** | 预设是 `link:` 挂载的，junction 悬空 → 插件页报 `包元信息错误 … ENOENT`，预设失效 | 先 `remove_bundle` → 移动 → 从新路径 `install_bundle` → 刷新界面；判据见第三节末 |
+| 拿界面上的旧报错当当前状态 | 缓存住的失败信息会误导排查方向 | 以 `list_bundles` / junction 指向 / `package.json` 为准 |
 | 同一条规则写两处 | 迟早漂移，且没人知道该信哪份 | README / AGENTS 只**描述**，不复述 `PROMPT.md` 的规则 |
 | `git push --force` | 覆盖远端历史 | 除仓库整体替换那一次外禁用；需要时先确认 |
 | 临时文件留在仓库里 | 无主文件进版本库 | 本轮产物本轮清 |
@@ -200,6 +230,8 @@ node -e "console.log(require('fs').statSync('PROMPT.md').size,'字节')"
 - [ ] `PROMPT.md` 与嵌入的 prefix 一致（脚本已保证；仍建议独立解析一次）
 - [ ] `preset/cordis.patch.yml` 没被手工改过（`git diff` 里只有生成结果的变化）
 - [ ] 安装后三条校验（bundle 在册 / 行 active / Config 有 `preset-luzzy`）全过
+- [ ] 本仓库目录若被移动 / 更名过：已按第三节顺序「卸载 → 移动 → 从新路径重装」，且 `package.json` 与 `pnpm-lock.yaml` 里搜不到旧路径
+- [ ] 界面若还红着旧路径的 `包元信息错误`：已刷新确认是缓存残留（`list_bundles` 正常即不是装坏）
 - [ ] 新会话里能选到 Luzzy，人设生效
 - [ ] README 数字实测更新；描述与 topics 口径一致
 - [ ] 仓库内搜一遍旧名 / 旧机制残留（`LuzzyPrompt`、`.agent-presets`、`sync-persona`）

@@ -102,6 +102,8 @@ preset/
 2. 校验：`list_bundles` 能看到它，`list_plugins` 里 `preset-luzzy` 行为 active
 3. **新建会话**才能在预设列表里选到 Luzzy；已开着的会话保持旧修订（KV cache 与预设代际的原因）
 
+> **装好之后别移动、别更名本仓库目录。** 预设是以 `link:` 挂载的，安装源必须原地存在——目录一动链接就悬空，插件页会报 `包元信息错误 … ENOENT`。真要挪：先 `remove_bundle` 卸载 → 移动 → 从新路径 `install_bundle` → **刷新页面**（页面上的旧报错是缓存，Host 已经正常它也不会自己消失）。完整顺序与判据见 [AGENTS.md](AGENTS.md) 第三节。
+
 ## 仓库结构
 
 ```
