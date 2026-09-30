@@ -8,7 +8,7 @@
 懒——太阳晒在身上的那种懒。但懒底下竖着一根很细的神经。
 
 [![License](https://img.shields.io/badge/license-MIT-2ea44f?style=flat-square)](LICENSE)
-[![Prompt](https://img.shields.io/badge/%E6%8F%90%E7%A4%BA%E8%AF%8D-449_%E8%A1%8C_%C2%B7_16.6k_%E5%AD%97-8250df?style=flat-square)](PROMPT.md)
+[![Prompt](https://img.shields.io/badge/%E6%8F%90%E7%A4%BA%E8%AF%8D-462_%E8%A1%8C_%C2%B7_17.7k_%E5%AD%97-8250df?style=flat-square)](PROMPT.md)
 [![Preset](https://img.shields.io/badge/DSH_%E9%A2%84%E8%AE%BE-%E5%8F%AF%E7%9B%B4%E6%8E%A5%E5%AE%89%E8%A3%85-0969da?style=flat-square)](preset/)
 [![Tools](https://img.shields.io/badge/%E5%B7%A5%E5%85%B7%E9%9B%86-standard_%E5%90%8C%E6%AC%BE-1f883d?style=flat-square)](preset/tools.patch.yml)
 [![Verify](https://img.shields.io/badge/%E5%B5%8C%E5%85%A5%E5%9B%9E%E9%AA%8C-%E9%80%90%E5%AD%97%E8%8A%82%E4%B8%80%E8%87%B4-8957e5?style=flat-square)](preset/build-preset.mjs)
@@ -54,7 +54,7 @@ ls  Luzzy-DSH-Prompt/preset/       # DSH 预设：装进 DeepSeek Harness 里选
 
 ## 这份提示词长什么样
 
-`PROMPT.md` 是完整的人设 + 行为规范，449 行，八个部分：
+`PROMPT.md` 是完整的人设 + 行为规范，462 行，八个部分（**§8 固定思考路径永远垫底**，新增内容一律插在它之前）：
 
 | 节 | 内容 |
 | --- | --- |
@@ -65,7 +65,7 @@ ls  Luzzy-DSH-Prompt/preset/       # DSH 预设：装进 DeepSeek Harness 里选
 | **§5 记忆系统** | 何时检索、何时写入、写入格式、记忆安全四步判断；未挂载就说「记忆能力不可用」再干别的 |
 | **§6 技能清单** | 收录标准（开源 + 高 stars + 确有 SKILL）· 五类仓库来源 + 本仓库自指 + 本机子智能体 / 团队 · 在线抓取 · 命中即全量加载（不可跳过的前置闸门）· 自更新 · 自查 · 兜底与留痕 |
 | **§7 工作区规范** | 临时文件必删、不留无主文件、分类摆放、交付留痕、收尾自查 |
-| **§8 固定思考路径** | 五个 Phase（理解 → 拆解 → 多路径 → 执行 → 验证）＋贯穿全程的推理姿态；入口必过，深度随题浮动 |
+| **§8 固定思考路径** | 永远垫底的总纲：五个 Phase（理解 → 拆解 → 多路径 → 执行 → 验证）＋推理姿态；§1–§7 的规则各自落在某个 Phase，入口必过、深度随题浮动 |
 
 > 提示词里的工具名（`web_search`、`search_memory`……）是**写法示例**：能对上的就用，对不上的按同一条判据找本机对应工具。它约束的是动作性质，不是工具名。
 

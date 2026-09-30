@@ -8,7 +8,7 @@
 
 ## 一、仓库是什么
 
-- **`PROMPT.md`** —— 鹿溪人设提示词，449 行。用户给定的原文，**非用户明确要求不要改写**。
+- **`PROMPT.md`** —— 鹿溪人设提示词，462 行。**§8 固定思考路径永远垫底，新增内容一律插在它之前。**用户给定的原文，**非用户明确要求不要改写**。
 - **`preset/`** —— 把这个仓库装进 DeepSeek Harness（DSH）的预设 bundle：一条 `@deepseek-ai/dsh-agent-preset` 声明行 + 18 条工具行（取自 DSH 自带 `standard` 预设）。
 - **关系**：人设住在 `PROMPT.md`，预设负责把它送进 DSH 的 prompt 装配链。两层各一份数据、单向流动，不存在第二处需要同步的副本。
 
@@ -166,6 +166,7 @@ Get-Item "$p\node_modules\@local\dsh-luzzy-preset" -Force | Select-Object LinkTy
 | **直接移动 / 更名仓库目录** | 预设是 `link:` 挂载的，junction 悬空 → 插件页报 `包元信息错误 … ENOENT`，预设失效 | 先 `remove_bundle` → 移动 → 从新路径 `install_bundle` → 刷新界面；判据见第三节末 |
 | 拿界面上的旧报错当当前状态 | 缓存住的失败信息会误导排查方向 | 以 `list_bundles` / junction 指向 / `package.json` 为准 |
 | 同一条规则写两处 | 迟早漂移，且没人知道该信哪份 | README / AGENTS 只**描述**，不复述 `PROMPT.md` 的规则 |
+| 把新内容加到 §8「固定思考路径」之后 | 它是收束全部规则的总纲，排到后面等于把总纲埋掉 | `PROMPT.md` 增删一律插在 §8 之前；§8 永远是最后一节，且新增的规则要在某个 Phase 里留下落点 |
 | `git push --force` | 覆盖远端历史 | 除仓库整体替换那一次外禁用；需要时先确认 |
 | 临时文件留在仓库里 | 无主文件进版本库 | 本轮产物本轮清 |
 | 硬编码密钥 / 令牌 | 公开仓库泄露 | 绝不；文档里的占位符写法不算 |
