@@ -10,8 +10,9 @@
 
 - **`PROMPT.md`** —— 鹿溪人设提示词，455 行。**§8 固定思考路径永远垫底，新增内容一律插在它之前。**用户给定的原文，**非用户明确要求不要改写**。
 - **`skills.registry.md`** —— 技能清单（Skill Registry）的本体，71 行。§6 的清单由 `build-preset.mjs` 从这里注入 `PROMPT.md` 的 `SKILL-REGISTRY` 区块；加载协议、分类规则、收录标准仍写在 `PROMPT.md` §6。
+- **`PROMPT.full.md`** —— **构建产物**（522 行）：上面两份合成后的完整提示词，自洽、可直接当 system prompt 用。它专治「非 DSH 环境拿到 `PROMPT.md` 会发现 §6 清单是空的」——**对外给这份，不要给源文件**。
 - **`preset/`** —— 把这个仓库装进 DeepSeek Harness（DSH）的预设 bundle：一条 `@deepseek-ai/dsh-agent-preset` 声明行 + 18 条工具行（取自 DSH 自带 `standard` 预设）。
-- **关系**：人设住在 `PROMPT.md`、技能清单住在 `skills.registry.md`，构建脚本把两者合成一份提示词，预设负责把它送进 DSH 的 prompt 装配链。每份数据只有一个真源，单向流动，不存在第二处需要同步的副本。
+- **关系**：人设住在 `PROMPT.md`、技能清单住在 `skills.registry.md`，构建脚本把两者合成完整提示词（落一份 `PROMPT.full.md`），预设负责把它送进 DSH 的 prompt 装配链。每份数据只有一个真源，产物一律由脚本生成。
 
 **历史沿革（别踩）**：本仓库 2026-09-29 由 `LuzzyPrompt` 更名而来，内容是**完全替换**——旧版《综合智能体行为契约》与其 `skills/`、`evals/`、旧 README/AGENTS 全部移除，提交历史已清空。旧文档里那套 `~/.dsh/.agent-presets/<名>/` 部署链路（`persona.md` + `agent.cordis.yml` + `sync-persona.mjs`）在当前 DSH 上**已经失效**，见第三节。
 
@@ -93,8 +94,9 @@ for (const f of files.filter((f) => f.p.includes(filter))) {
 
 ```bash
 # 1) 改人设 → 编辑 PROMPT.md；改技能清单 → 编辑 skills.registry.md（各有各的真源）
-# 2) 重新生成声明行；脚本先把 skills.registry.md 注入 PROMPT.md 的注入区（只在内存里），
-#    再把结果嵌入 YAML 并逐字节回验；不一致就退出 1 且不覆盖旧文件
+# 2) 重新生成两份产物：PROMPT.full.md（注入后的完整提示词，供非 DSH 环境用）
+#    与 preset/cordis.patch.yml（嵌进 prefix 的 preset 声明）；都带逐字节回验，
+#    不一致就退出 1 且不覆盖旧文件
 node preset/build-preset.mjs
 # 3) 重新安装（下面的 install_bundle），再开新会话
 ```
@@ -165,6 +167,7 @@ Get-Item "$p\node_modules\@local\dsh-luzzy-preset" -Force | Select-Object LinkTy
 | `PROMPT.md` 里出现双花括号变量语法 | DSH 把 persona 前缀当模板渲染，`{{…}}` 会被当 prompt 变量解析；变量名不合法**整个预设加载失败** | 占位符统一写 `${...}`；`build-preset.mjs` 已前置拦截并退出 1 |
 | 手改 `cordis.patch.yml` | 下次生成产生无法比对的 diff，人设真源被架空 | 只改 `PROMPT.md`、`skills.registry.md` 与 `tools.patch.yml`，其余重跑脚本 |
 | 手改 `PROMPT.md` 的 `SKILL-REGISTRY` 注入区 | 下次构建会把改动冲掉，技能清单出现两份真源 | 清单只改 `skills.registry.md`；注入区是构建落点，不是编辑位 |
+| 手改 `PROMPT.full.md` | 它是产物，下次构建直接覆盖，改动无声消失 | 改人设改 `PROMPT.md`、改清单改 `skills.registry.md`，然后重跑脚本 |
 | CRLF 行尾 | 逐字节回验在第 1 行就失败 | 全仓库 LF（`.gitattributes` 钉 `eol=lf`）；脚本仍会兜底规整并告警 |
 | 重复 `config.id` | 声明加载失败，预设不进名册 | 加预设前先确认 id 未被占用 |
 | 改了预设就在当前会话里试 | 老会话不会更新，白白怀疑改动无效 | 开新会话验证 |
@@ -234,6 +237,7 @@ node -e "console.log(require('fs').statSync('PROMPT.md').size,'字节')"
 
 - [ ] `node preset/build-preset.mjs` 通过（「PROMPT.md + skills.registry.md」逐字节回验 OK）
 - [ ] 注入后的提示词与嵌入的 prefix 一致，且 **§8 仍是最后一节**（脚本已保证；仍建议独立解析一次）
+- [ ] `PROMPT.full.md` 与 `cordis.patch.yml` 的 prefix 内容一致，且不含 `SKILL-REGISTRY` 构建标记
 - [ ] `preset/cordis.patch.yml` 没被手工改过（`git diff` 里只有生成结果的变化）
 - [ ] 安装后三条校验（bundle 在册 / 行 active / Config 有 `preset-luzzy`）全过
 - [ ] 本仓库目录若被移动 / 更名过：已按第三节顺序「卸载 → 移动 → 从新路径重装」，且 `package.json` 与 `pnpm-lock.yaml` 里搜不到旧路径

@@ -21,19 +21,23 @@
 ```bash
 git clone git@github.com:LuzzyMeow/Luzzy-DSH-Prompt.git
 
-cat Luzzy-DSH-Prompt/PROMPT.md            # 人设 + 规则正文
-cat Luzzy-DSH-Prompt/skills.registry.md   # 技能清单本体：构建时注入 PROMPT.md §6
+cat Luzzy-DSH-Prompt/PROMPT.full.md       # ← 要当 system prompt 用，就吃这份（完整、自洽）
 ls  Luzzy-DSH-Prompt/preset/              # DSH 预设：装进 DeepSeek Harness 里选用
+
+# 下面两份是源文件，改东西时才需要看：
+cat Luzzy-DSH-Prompt/PROMPT.md            # 人设 + 规则（§6 留技能清单注入区）
+cat Luzzy-DSH-Prompt/skills.registry.md   # 技能清单本体
 ```
 
-两条路各走各的，互不依赖：
+三条路：
 
 | 你想干什么 | 用哪个 | 怎么用 |
 | --- | --- | --- |
-| 在任意 harness 里要这个语气 | `PROMPT.md` + `skills.registry.md` | 两份合起来注入 system prompt（清单落在 §6 的位置）；只注入 `PROMPT.md` 也能跑，清单那段留空即是 |
+| 在任意 harness 里要这个语气 | **`PROMPT.full.md`** | 直接整份注入 system prompt —— 人设与技能清单已经合好了，不用自己拼 |
+| 想改人设或技能来源 | `PROMPT.md` + `skills.registry.md` | 两份**源文件**各改各的，再跑 `node preset/build-preset.mjs` 重新生成完整版 |
 | 在 DSH 里多一个叫 **Luzzy** 的预设 | `preset/` | 让 DSH Agent 用 `plugin_manager` 安装本目录，新会话里选它 |
 
-> 装 DSH 预设的完整流程、校验与坑位，见 [AGENTS.md](AGENTS.md)；只想用提示词的话，读 `PROMPT.md` 就够了。
+> `PROMPT.full.md` 与 `preset/cordis.patch.yml` 都是**构建产物**，别手改——改了下次构建就冲掉。装预设的完整流程、校验与坑位见 [AGENTS.md](AGENTS.md)。
 
 ## 这是谁
 
@@ -101,8 +105,9 @@ preset/
 
 ```
 Luzzy-DSH-Prompt/
-├── PROMPT.md              人设提示词正文 —— 唯一真源（§6 留技能清单注入区）
-├── skills.registry.md     技能清单本体 —— 构建时注入 PROMPT.md §6
+├── PROMPT.full.md         完整提示词 —— 构建产物，直接当 system prompt 用
+├── PROMPT.md              人设正文真源（§6 留技能清单注入区）
+├── skills.registry.md     技能清单真源 —— 构建时注入 PROMPT.md §6
 ├── preset/                DSH 预设 bundle（可直接安装）
 ├── AGENTS.md              维护指南：怎么改、什么不许动 + v2.0 路线图
 ├── README.md
@@ -116,7 +121,7 @@ Luzzy-DSH-Prompt/
 
 ```bash
 # 1) 改人设 → PROMPT.md；改技能清单 → skills.registry.md
-# 2) 重新生成：脚本先把清单注入 PROMPT.md §6，再嵌入预设并逐字节回验
+# 2) 重新生成：脚本合成完整提示词写进 PROMPT.full.md，再嵌入预设并逐字节回验
 node preset/build-preset.mjs
 # 3) 重新安装 preset/，再开新会话
 ```

@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 /**
- * 由 ../PROMPT.md 生成同目录的 cordis.patch.yml（DSH agent preset 声明）。
+ * 由 ../PROMPT.md + ../skills.registry.md 生成两份产物：
+ *   - preset/cordis.patch.yml —— DSH agent preset 声明（提示词嵌在 persona 的 prefix 块标量里）
+ *   - PROMPT.full.md         —— 注入后的完整提示词，供非 DSH 环境直接当 system prompt 用
  *
  *   node preset/build-preset.mjs
  *
  * 约定（改之前先读 AGENTS.md 第三节）：
- *   - PROMPT.md 是人设的唯一真源；本脚本是它进入 YAML 的唯一通道。
- *   - skills.registry.md（仓库根）是技能清单的本体：本脚本把它注入 PROMPT.md §6 的
- *     SKILL-REGISTRY 区块——注入只发生在内存里，不回写 PROMPT.md。
- *   - cordis.patch.yml 由本脚本生成，**不要手工编辑**（手改会让下次生成产生无法比对的 diff）。
- *   - 生成后立刻回验：把 YAML 块标量解析回来，与「注入后的 PROMPT.md」逐字节比对；
- *     不一致就报错退出 1，并保留旧文件。
+ *   - PROMPT.md 是人设的唯一真源；skills.registry.md 是技能清单的唯一真源。
+ *   - skills.registry.md 会被注入 PROMPT.md §6 的 SKILL-REGISTRY 区块——注入只在内存里，
+ *     不回写 PROMPT.md；PROMPT.full.md 是这次注入的落盘结果，同样是产物，不要手改。
+ *   - 两份产物都由本脚本生成，**不要手工编辑**（手改会让下次生成产生无法比对的 diff）。
+ *   - 生成后立刻回验：YAML 块标量解析回来与「注入后的 PROMPT.md」逐字节比对，
+ *     PROMPT.full.md 写盘后读回比对。不一致就报错退出 1，并保留旧文件。
  *
  * 退出码：0 = 生成且回验通过；1 = 校验或回验失败（不写文件）。
  */
@@ -25,6 +27,7 @@ const PROMPT = path.join(root, "PROMPT.md");
 const REGISTRY = path.join(root, "skills.registry.md");
 const TOOLS = path.join(here, "tools.patch.yml");
 const OUT = path.join(here, "cordis.patch.yml");
+const FULL = path.join(root, "PROMPT.full.md"); // 注入后的完整提示词：非 DSH 环境直接用这份
 
 /** 声明行元数据：改了这里，README 的展示名也要跟着看一遍。 */
 const PRESET = {
@@ -94,6 +97,7 @@ function readRegistry() {
 
 /**
  * 把 registry 正文注入 PROMPT.md 的 SKILL-REGISTRY 区块（只在内存里，不回写源文件）。
+ * 整块替换——连 BEGIN/END 标记一起去掉，产物里不带构建标记。
  * 区块位于 §6 之内，所以注入后 §8 仍是全文最后一节。
  */
 function injectRegistry(prompt, registry) {
@@ -104,7 +108,7 @@ function injectRegistry(prompt, registry) {
   if (start === -1 || stop === -1 || stop < start) {
     fail("PROMPT.md 里找不到 SKILL-REGISTRY:BEGIN / END 区块（技能清单的注入点）");
   }
-  return `${prompt.slice(0, start + BEGIN.length)}\n${registry}\n${prompt.slice(stop)}`;
+  return `${prompt.slice(0, start)}${registry}${prompt.slice(stop + END.length)}`;
 }
 
 function render(prompt, tools) {
@@ -186,10 +190,20 @@ if (back !== rendered) {
 const previous = fs.existsSync(OUT) ? fs.readFileSync(OUT, "utf8") : null;
 fs.writeFileSync(OUT, yamlText, "utf8");
 
+// 同一份合成结果再落一份纯提示词：任意 harness 直接把 PROMPT.full.md 当 system prompt 用。
+// 它不是新的真源——真源仍是 PROMPT.md + skills.registry.md，本文件只是两者的产物。
+const fullPrevious = fs.existsSync(FULL) ? fs.readFileSync(FULL, "utf8") : null;
+fs.writeFileSync(FULL, `${rendered}\n`, "utf8");
+const fullBack = fs.readFileSync(FULL, "utf8").replace(/\r\n/g, "\n").replace(/\n+$/, "");
+if (fullBack !== rendered) {
+  fail("PROMPT.full.md 回验失败：写入后读回与合成结果不一致");
+}
+
 const lines = rendered.split("\n").length;
 const rows = (tools.match(/^ {10}- id: /gm) || []).length;
 const entries = (registry.match(/^\d+\.\d+ `/gm) || []).length;
 console.log(`[build-preset] 已生成 ${path.relative(root, OUT)}`);
+console.log(`[build-preset] 已生成 ${path.relative(root, FULL)}（完整提示词，${fullPrevious === null ? "首次生成" : fullPrevious.replace(/\n+$/, "") === rendered ? "无变化" : "有变化"}）`);
 console.log(`[build-preset] 人设回验通过：${lines} 行 / ${[...rendered].length} 字，与「PROMPT.md + skills.registry.md」逐字节一致`);
 console.log(`[build-preset] 技能登记表：${entries} 条（来自 skills.registry.md）`);
 console.log(`[build-preset] 工具行：${rows} 条（persona 之外，来自 tools.patch.yml）`);
