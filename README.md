@@ -79,7 +79,7 @@ preset/
 ├── package.json          bundle 清单：声明 dsh.bundle.patch
 ├── cordis.patch.yml      生成物：preset 声明 + persona 人设块（勿手改）
 ├── tools.patch.yml       工具行：与 DSH 自带 standard 预设同款
-└── build-preset.mjs      PROMPT.md → cordis.patch.yml，带逐字节回验
+└── build-preset.mjs      PROMPT.md + skills.registry.md → cordis.patch.yml，带逐字节回验
 ```
 
 ```yaml
@@ -94,7 +94,7 @@ preset/
           - id: persona
             name: '@deepseek-ai/dsh-persona'
             config:
-              prefix: |-      # ← PROMPT.md 逐字节嵌在这里
+              prefix: |-      # ← PROMPT.md + 注入的清单，逐字节嵌在这里
 ```
 
 安装与生效：
