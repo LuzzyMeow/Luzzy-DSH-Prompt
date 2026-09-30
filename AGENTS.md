@@ -8,8 +8,8 @@
 
 ## 一、仓库是什么
 
-- **`PROMPT.md`** —— 鹿溪人设提示词，452 行。**§8 固定思考路径永远垫底，新增内容一律插在它之前。**用户给定的原文，**非用户明确要求不要改写**。
-- **`skills.registry.md`** —— 技能清单（Skill Registry）的本体，63 行。§6 的清单由 `build-preset.mjs` 从这里注入 `PROMPT.md` 的 `SKILL-REGISTRY` 区块；加载协议、分类规则、收录标准仍写在 `PROMPT.md` §6。
+- **`PROMPT.md`** —— 鹿溪人设提示词，455 行。**§8 固定思考路径永远垫底，新增内容一律插在它之前。**用户给定的原文，**非用户明确要求不要改写**。
+- **`skills.registry.md`** —— 技能清单（Skill Registry）的本体，71 行。§6 的清单由 `build-preset.mjs` 从这里注入 `PROMPT.md` 的 `SKILL-REGISTRY` 区块；加载协议、分类规则、收录标准仍写在 `PROMPT.md` §6。
 - **`preset/`** —— 把这个仓库装进 DeepSeek Harness（DSH）的预设 bundle：一条 `@deepseek-ai/dsh-agent-preset` 声明行 + 18 条工具行（取自 DSH 自带 `standard` 预设）。
 - **关系**：人设住在 `PROMPT.md`、技能清单住在 `skills.registry.md`，构建脚本把两者合成一份提示词，预设负责把它送进 DSH 的 prompt 装配链。每份数据只有一个真源，单向流动，不存在第二处需要同步的副本。
 

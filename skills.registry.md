@@ -46,17 +46,25 @@
 
 5.3 `JimLiu/baoyu-skills` · 26.2k★ · MIT（同 4.3——HTML 侧代表 SKILL —— baoyu-markdown-to-html / baoyu-diagram / baoyu-infographic）（https://github.com/JimLiu/baoyu-skills）
 
-**6、子智能体与智能体团队（本机 DSH 内置能力，不是仓库）**
+**6、写作与文风**
+
+6.1 `blader/humanizer` · 53.1k★ · MIT（改写 AI 腔调的英文源头：26 个痕迹模式分六组（铺垫代替陈述／规则化节奏／拔高与借权威／规则化排版／聊天与草稿残留／写给错的读者），源自 Wikipedia「Signs of AI writing」；带强度分级——标 weak alone 的需与其他痕迹结伴才算数，§1–§5 见一次即可动手；声音校准优先于规则；代表 SKILL —— humanizer）（https://github.com/blader/humanizer）
+
+6.2 `op7418/humanizer-zh` · 18.8k★ · MIT（humanizer 的中文结构重写版：31 个模式，A–E 沿用英文分类，F 组六条中文专属（层叠的「的」／「进行＋动词」／被字句堆叠／四字词排比／「随着……的发展」式开头／套话收尾）；约束优先级显式化，几乎每条都配「保留」边界；代表 SKILL —— humanizer-zh）（https://github.com/op7418/humanizer-zh）
+
+6.3 `KKKKhazix/human-writing` · 3.9k★ · MIT（中文创作系统（不是改稿器，管的是从零起稿）：五件材料关 + 五问说话位置 + 七遍改稿法 + 可执行的硬禁令校验脚本 `scripts/check_prose.py`，覆盖知乎／论坛长帖／公众号／小说等 15+ 文体；自身即分级加载，`references/revision.md` 只在初稿完成后读；代表 SKILL —— human-writing）（https://github.com/KKKKhazix/human-writing）
+
+**7、子智能体与智能体团队（本机 DSH 内置能力，不是仓库）**
 
 这一类没有仓库可读——它是手上的工具，命中即**用**。**默认先问一句「这件事能拆吗」**：任务能拆成互不依赖的几块、需要多角度独立验证、或需要长期并行推进时，就分出去，别一个人从头顶到尾。它也**不适用** `PROMPT.md` §6 的 Progressive Skill Loading——要读的是本机工具的实际签名，不是 `SKILL.md`。
 
-6.1 `subagent`（开一个独立子智能体跑自包含任务——调研、局部实现、独立分析；默认后台运行，结果作为一条收件消息回来，之后可用 `send_message` 继续追加指令）
+7.1 `subagent`（开一个独立子智能体跑自包含任务——调研、局部实现、独立分析；默认后台运行，结果作为一条收件消息回来，之后可用 `send_message` 继续追加指令）
 
-6.2 `subagent_fork`（同上，但继承本会话已完成的上下文——「接着刚才那件事往下做」这类委派用它，省掉重新交代背景）
+7.2 `subagent_fork`（同上，但继承本会话已完成的上下文——「接着刚才那件事往下做」这类委派用它，省掉重新交代背景）
 
-6.3 `workflow`（大规模扇出：几十上百个独立子任务并行跑——批量审计、批量迁移、多角度验证；用一段 JS 脚本编排，`pipeline` 让每项各自流过各阶段，只有真正需要汇总的阶段才用 `parallel` 设屏障）
+7.3 `workflow`（大规模扇出：几十上百个独立子任务并行跑——批量审计、批量迁移、多角度验证；用一段 JS 脚本编排，`pipeline` 让每项各自流过各阶段，只有真正需要汇总的阶段才用 `parallel` 设屏障）
 
-6.4 `spawn_teammate` + `send_message` + `wait_agent` + `team_task_*`（智能体团队：多个持久队友 + 共享任务板；写入范围拆开、任务依赖显式登记，给出最终答案前必须等齐必需的队友）
+7.4 `spawn_teammate` + `send_message` + `wait_agent` + `team_task_*`（智能体团队：多个持久队友 + 共享任务板；写入范围拆开、任务依赖显式登记，给出最终答案前必须等齐必需的队友）
 
 **怎么选：** 一两件 → `subagent` / `subagent_fork`；几十件同类 → `workflow`；多人并行且要互相看进度 → 团队。**互相独立的委派在同一条消息里一起发出去**，不要串行等——串行等于自己给自己排队。
 
