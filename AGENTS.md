@@ -113,6 +113,8 @@ plugin_manager · action: install_bundle · target: <本仓库 preset/ 的绝对
 
 **生效时机**：只对**新建会话**生效。已存在的会话与它的子代理保持启动时的插件修订——验证改动必须开新会话，别在老会话里下结论。
 
+> **为什么「重装一次」是必须的（2026-09-30 实测）**：profile 里并不存预设快照——`package.json` 里只有一条 `link:`，`cordis.patch.yml` 是用户自己的覆盖层，bundle 的 patch 经 junction 实时可读（实测 junction 侧与仓库侧 `cordis.patch.yml` 的 SHA256 一致）。真正的原因是注册表在**进程启动时**把每条声明建成内存里的 Loader 树——`@deepseek-ai/dsh-agent-preset-registry` 的 README 原话：「每个声明在启动时创建注册表拥有的 scope 和内存 Loader 树」。所以让新内容生效有两条路：**重装一次**（`install_bundle`），或**直接重启 DSH Desktop**——后者更省事，改完人设想马上看到效果时用它。两条路之后都还要开新会话。
+
 ### 要加第二个预设
 
 两种做法，按耦合度选：

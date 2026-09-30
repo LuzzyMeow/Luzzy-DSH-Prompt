@@ -86,8 +86,9 @@ function render(prompt, tools) {
 #   - 人设正文（system prompt）= PROMPT.md，逐字节嵌入下面的 prefix 块标量
 #   - 工具行 = tools.patch.yml（照搬 DSH 自带 standard 预设）
 #
-# 生效路径：安装后 DSH 读取的是安装时生成的快照，不是本文件——
-#   改完必须重新安装一次本目录（plugin_manager 的 install_bundle），
+# 生效路径：bundle 的 patch 是活文件（profile 里只有一条 link:，不存副本），
+#   但 DSH 在**进程启动时**把每条声明建成内存组合树——所以改完要让 Host 重新读一次：
+#   重新安装本目录（plugin_manager 的 install_bundle），或直接重启 DSH Desktop，
 #   再由**新会话**选用；进行中的会话保持旧修订。
 # ============================================================================
 - insert:
