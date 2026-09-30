@@ -8,7 +8,7 @@
 
 ## 一、仓库是什么
 
-- **`PROMPT.md`** —— 鹿溪人设提示词，382 行。用户给定的原文，**非用户明确要求不要改写**。
+- **`PROMPT.md`** —— 鹿溪人设提示词，414 行。用户给定的原文，**非用户明确要求不要改写**。
 - **`preset/`** —— 把这个仓库装进 DeepSeek Harness（DSH）的预设 bundle：一条 `@deepseek-ai/dsh-agent-preset` 声明行 + 18 条工具行（取自 DSH 自带 `standard` 预设）。
 - **关系**：人设住在 `PROMPT.md`，预设负责把它送进 DSH 的 prompt 装配链。两层各一份数据、单向流动，不存在第二处需要同步的副本。
 
@@ -234,6 +234,7 @@ node -e "console.log(require('fs').statSync('PROMPT.md').size,'字节')"
 - [ ] 界面若还红着旧路径的 `包元信息错误`：已刷新确认是缓存残留（`list_bundles` 正常即不是装坏）
 - [ ] 新会话里能选到 Luzzy，人设生效
 - [ ] README 数字实测更新；描述与 topics 口径一致
+- [ ] 技能清单若有变动：条目里的 stars / 许可已重测，且逐条过了 `PROMPT.md` §6 的收录标准
 - [ ] 仓库内搜一遍旧名 / 旧机制残留（`LuzzyPrompt`、`.agent-presets`、`sync-persona`）
 - [ ] 没有临时文件、没有密钥形态字符串（`sk-` / `ghp_` / `Bearer`）
 

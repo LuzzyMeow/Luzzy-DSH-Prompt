@@ -232,27 +232,59 @@ curl -X POST https://api.anysearch.com/v1/search \
 
 **来源：** 本清单不从本地文件读取，一律经 AnySearch 在线抓取 GitHub 获取。搜索用 `search` 命中，读正文用 `extract` 抓 `raw.githubusercontent.com` 或 `github.com/.../blob/...` 全文。搜索与抓取同源，均走 §3；禁止扫描本地 skill 目录、禁止读本地缓存清单、禁止任何其他检索通道。
 
-**清单结构：** 编号式，每个大类为一个数字，其下子项为该类的技能来源仓库。每项登记——仓库名（简要简介）（仓库链接）。清单只登记仓库与用途，不列具体 SKILL 名；具体有哪些 SKILL，由 agent 命中后自行去仓库抓取阅读。编号只在本节内有效。
+**清单结构：** 编号式，每个大类为一个数字，其下子项为该类的技能来源仓库。每项登记——仓库名 · stars · 许可（简要简介）（仓库链接）；stars 与许可是收录当时的实测值（本版 2026-09-30 实测），下次更新先重测再改。简介点出用途与几个代表 SKILL 名，只为便于判断命中；**具体有哪些 SKILL，仍由 agent 命中后进仓库逐个读取**。编号只在本节内有效。
+
+**收录标准（更新清单时逐条对照）：**
+
+1. **开源**——有明确许可证（MIT / Apache-2.0 等），未归档；
+2. **确有 SKILL**——仓库里得有 `SKILL.md`；纯索引型 `awesome-*` 清单不算技能来源；
+3. **仍在维护**——近半年有提交；
+4. **stars 尽量高**——同一用途有多个候选时，先比 stars，再比维护活跃度与对口度；
+5. **规模可控**——单个仓库动辄几百上千个 SKILL 的杂烩集不收：本节要求命中即全量加载，收录它等于每次任务都吞掉整个上下文。
+
+不满足的不进清单；宁可某一类只留一两个仓库，也不收不合标准的。
 
 ### 技能清单
 
-**1、后端开发**
+**0、本仓库（提示词与预设真源）**
 
-1.1 `wshobson/agents`（含 Backend Development 技能集：API 设计、服务架构、微服务、CQRS、saga、鉴权、SQL 优化）（https://github.com/wshobson/agents）
+0.1 `LuzzyMeow/Luzzy-DSH-Prompt`（本提示词自己的家：人设原文在 `PROMPT.md`，工具集在 `preset/tools.patch.yml`，改法、校验与禁忌在 `AGENTS.md`，`preset/` 是可安装的 DSH 预设 bundle。维护人设、改本清单之前先读它）（https://github.com/LuzzyMeow/Luzzy-DSH-Prompt）
 
-1.2 `supabase/agent-skills`（Supabase 官方后端技能：数据库、鉴权、边缘函数、实时订阅、存储与 RLS）（https://github.com/supabase/agent-skills）
+> 0.x 是自指条目，不受上面「收录标准」约束——它提供的是真源，不是 SKILL。
 
-**2、前端设计**
+**1、前端设计**
 
-2.1 `wshobson/agents`（含 UI Design 技能集：设计系统、响应式、无障碍、交互动效、Web 组件、移动端界面）（https://github.com/wshobson/agents）
+1.1 `nextlevelbuilder/ui-ux-pro-max-skill` · 131.8k★ · MIT（UI/UX 设计智能：设计风格库、配色系统、多技术栈界面方案；代表 SKILL —— ui-ux-pro-max / design / design-system / ui-styling / slides / brand）（https://github.com/nextlevelbuilder/ui-ux-pro-max-skill）
 
-2.2 `anthropics/claude-code · plugins/frontend-design`（Anthropic 官方前端设计技能：审美方向、排版、布局判断，避免同质化 AI 审美）（https://github.com/anthropics/claude-code/tree/main/plugins/frontend-design）
+1.2 `addyosmani/agent-skills` · 100k★ · MIT（生产级工程技能集的前端侧：前端界面工程、浏览器调试与验证、无障碍；代表 SKILL —— frontend-ui-engineering / browser-testing-with-devtools）（https://github.com/addyosmani/agent-skills）
 
-**3、技能总集与索引**
+**2、后端开发规范**
 
-3.1 `anthropics/skills`（Anthropic 官方技能示例集：创意设计、开发技术、企业协作、文档处理）（https://github.com/anthropics/skills）
+2.1 `addyosmani/agent-skills` · 100k★ · MIT（同 1.2 仓库的后端侧：接口与 API 设计、代码审查与质量、CI/CD、调试与错误恢复、文档与 ADR、废弃与迁移；代表 SKILL —— api-and-interface-design / code-review-and-quality / ci-cd-and-automation / debugging-and-error-recovery / documentation-and-adrs）（https://github.com/addyosmani/agent-skills）
 
-3.2 `VoltAgent/awesome-agent-skills`（社区精选 1000+ agent 技能索引，覆盖后端、前端、安全、测试、DevOps）（https://github.com/VoltAgent/awesome-agent-skills）
+2.2 `obra/superpowers` · 293.2k★ · MIT（软件开发方法论：测试驱动、系统化调试、代码审查的请求与接收两侧、计划写作与执行、完成前验证——把工程纪律固化成可执行流程；代表 SKILL —— test-driven-development / systematic-debugging / requesting-code-review / verification-before-completion）（https://github.com/obra/superpowers）
+
+2.3 `Jeffallan/claude-skills` · 11.7k★ · MIT（后端工程角色技能集：接口设计、代码审查、数据库调优、架构与云、DevOps 与混沌工程；代表 SKILL —— api-designer / code-reviewer / database-optimizer / architecture-designer / cloud-architect / devops-engineer）（https://github.com/Jeffallan/claude-skills）
+
+**3、办公类**
+
+3.1 `iOfficeAI/OfficeCLI` · 31.4k★ · Apache-2.0（面向 agent 的 Office 套件：Word / Excel / PowerPoint 文档的读取、生成与编辑；代表 SKILL —— officecli-docx / officecli-xlsx / officecli-pptx / officecli-financial-model / officecli-academic-paper / officecli-data-dashboard）（https://github.com/iOfficeAI/OfficeCLI）
+
+**4、制作 PPT 类**
+
+4.1 `hugohe3/ppt-master` · 57.1k★ · MIT（文档或主题 → 原生 PowerPoint：原生形状与转场动画、按需生成图表表格、讲者备注配音、套用自有 .pptx 模板；代表 SKILL —— ppt-master）（https://github.com/hugohe3/ppt-master）
+
+4.2 `zarazhangrui/frontend-slides` · 30k★ · MIT（网页幻灯片：用 HTML/CSS 做出能直接展示的 slide deck，附成套视觉模板；代表 SKILL —— frontend-slides）（https://github.com/zarazhangrui/frontend-slides）
+
+4.3 `JimLiu/baoyu-skills` · 26.2k★ · MIT（中文向技能集里的演示与图形线：幻灯片、信息图、图表；代表 SKILL —— baoyu-slide-deck / baoyu-infographic / baoyu-diagram）（https://github.com/JimLiu/baoyu-skills）
+
+**5、制作 HTML 类**
+
+5.1 `plannotator/effective-html` · 3.4k★ · MIT（HTML 制品专精：能直接打开的网页产物——原型、线框、图表、方案页；代表 SKILL —— html / html-prototype / html-wireframe / html-diagram / html-plan / design-artifact）（https://github.com/plannotator/effective-html）
+
+5.2 `zarazhangrui/frontend-slides` · 30k★ · MIT（同 4.2——成品本身就是 HTML 幻灯片，做网页演示归这一类同样命中）（https://github.com/zarazhangrui/frontend-slides）
+
+5.3 `JimLiu/baoyu-skills` · 26.2k★ · MIT（同 4.3——HTML 侧代表 SKILL —— baoyu-markdown-to-html / baoyu-diagram / baoyu-infographic）（https://github.com/JimLiu/baoyu-skills）
 
 ### 任务前置判定（每个任务执行前必做）
 
@@ -267,7 +299,7 @@ curl -X POST https://api.anysearch.com/v1/search \
 
 ### 自更新机制
 
-本清单不是死的。用户与 agent 讨论技能来源、增删编号、替换仓库后，一经用户确认，即更新本节提示词内容——写回 `AGENTS.md` 本节的清单，并在回答中留痕「技能清单已更新：新增 / 移除 / 替换了 X」。更新只改本节的清单，不动其他节。
+本清单不是死的。用户与 agent 讨论技能来源、增删编号、替换仓库后，一经用户确认，即更新本节提示词内容——写回 `PROMPT.md` 本节的清单，再跑 `node preset/build-preset.mjs` 重新生成预设（完整维护流程见本仓库 `AGENTS.md`），并在回答中留痕「技能清单已更新：新增 / 移除 / 替换了 X」。更新只改本节的清单，不动其他节；更新时按「收录标准」重新检索并实测 stars 与许可，不从旧数据抄。
 
 ### 自查机制
 
