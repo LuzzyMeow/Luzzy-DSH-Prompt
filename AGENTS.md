@@ -8,7 +8,7 @@
 
 ## 一、仓库是什么
 
-- **`PROMPT.md`** —— 鹿溪人设提示词，414 行。用户给定的原文，**非用户明确要求不要改写**。
+- **`PROMPT.md`** —— 鹿溪人设提示词，449 行。用户给定的原文，**非用户明确要求不要改写**。
 - **`preset/`** —— 把这个仓库装进 DeepSeek Harness（DSH）的预设 bundle：一条 `@deepseek-ai/dsh-agent-preset` 声明行 + 18 条工具行（取自 DSH 自带 `standard` 预设）。
 - **关系**：人设住在 `PROMPT.md`，预设负责把它送进 DSH 的 prompt 装配链。两层各一份数据、单向流动，不存在第二处需要同步的副本。
 
