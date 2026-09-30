@@ -8,9 +8,10 @@
 
 ## 一、仓库是什么
 
-- **`PROMPT.md`** —— 鹿溪人设提示词，462 行。**§8 固定思考路径永远垫底，新增内容一律插在它之前。**用户给定的原文，**非用户明确要求不要改写**。
+- **`PROMPT.md`** —— 鹿溪人设提示词，477 行。**§8 固定思考路径永远垫底，新增内容一律插在它之前。**用户给定的原文，**非用户明确要求不要改写**。
+- **`skills.registry.md`** —— 技能清单（Skill Registry）的本体，63 行。§6 的清单由 `build-preset.mjs` 从这里注入 `PROMPT.md` 的 `SKILL-REGISTRY` 区块；加载协议、分类规则、收录标准仍写在 `PROMPT.md` §6。
 - **`preset/`** —— 把这个仓库装进 DeepSeek Harness（DSH）的预设 bundle：一条 `@deepseek-ai/dsh-agent-preset` 声明行 + 18 条工具行（取自 DSH 自带 `standard` 预设）。
-- **关系**：人设住在 `PROMPT.md`，预设负责把它送进 DSH 的 prompt 装配链。两层各一份数据、单向流动，不存在第二处需要同步的副本。
+- **关系**：人设住在 `PROMPT.md`、技能清单住在 `skills.registry.md`，构建脚本把两者合成一份提示词，预设负责把它送进 DSH 的 prompt 装配链。每份数据只有一个真源，单向流动，不存在第二处需要同步的副本。
 
 **历史沿革（别踩）**：本仓库 2026-09-29 由 `LuzzyPrompt` 更名而来，内容是**完全替换**——旧版《综合智能体行为契约》与其 `skills/`、`evals/`、旧 README/AGENTS 全部移除，提交历史已清空。旧文档里那套 `~/.dsh/.agent-presets/<名>/` 部署链路（`persona.md` + `agent.cordis.yml` + `sync-persona.mjs`）在当前 DSH 上**已经失效**，见第三节。
 
@@ -91,8 +92,9 @@ for (const f of files.filter((f) => f.p.includes(filter))) {
 ## 三、改这个仓库的预设：标准流程
 
 ```bash
-# 1) 改人设：编辑 PROMPT.md（唯一真源）
-# 2) 重新生成声明行；脚本会把嵌入结果解析回来逐字节比对，不一致就退出 1 且不覆盖旧文件
+# 1) 改人设 → 编辑 PROMPT.md；改技能清单 → 编辑 skills.registry.md（各有各的真源）
+# 2) 重新生成声明行；脚本先把 skills.registry.md 注入 PROMPT.md 的注入区（只在内存里），
+#    再把结果嵌入 YAML 并逐字节回验；不一致就退出 1 且不覆盖旧文件
 node preset/build-preset.mjs
 # 3) 重新安装（下面的 install_bundle），再开新会话
 ```
@@ -161,7 +163,8 @@ Get-Item "$p\node_modules\@local\dsh-luzzy-preset" -Force | Select-Object LinkTy
 | 坑 | 后果 | 规矩 |
 | --- | --- | --- |
 | `PROMPT.md` 里出现双花括号变量语法 | DSH 把 persona 前缀当模板渲染，`{{…}}` 会被当 prompt 变量解析；变量名不合法**整个预设加载失败** | 占位符统一写 `${...}`；`build-preset.mjs` 已前置拦截并退出 1 |
-| 手改 `cordis.patch.yml` | 下次生成产生无法比对的 diff，人设真源被架空 | 只改 `PROMPT.md` 与 `tools.patch.yml`，其余重跑脚本 |
+| 手改 `cordis.patch.yml` | 下次生成产生无法比对的 diff，人设真源被架空 | 只改 `PROMPT.md`、`skills.registry.md` 与 `tools.patch.yml`，其余重跑脚本 |
+| 手改 `PROMPT.md` 的 `SKILL-REGISTRY` 注入区 | 下次构建会把改动冲掉，技能清单出现两份真源 | 清单只改 `skills.registry.md`；注入区是构建落点，不是编辑位 |
 | CRLF 行尾 | 逐字节回验在第 1 行就失败 | 全仓库 LF（`.gitattributes` 钉 `eol=lf`）；脚本仍会兜底规整并告警 |
 | 重复 `config.id` | 声明加载失败，预设不进名册 | 加预设前先确认 id 未被占用 |
 | 改了预设就在当前会话里试 | 老会话不会更新，白白怀疑改动无效 | 开新会话验证 |
@@ -211,7 +214,7 @@ node -e "const t=require('fs').readFileSync('PROMPT.md','utf8');console.log([...
 node -e "console.log(require('fs').statSync('PROMPT.md').size,'字节')"
 ```
 
-`PROMPT.md` 是唯一会变的数字来源；`preset/tools.patch.yml` 的行数变了，README 徽章里的「工具集」说明也要跟着看一遍。
+会变的数字有三个来源：`PROMPT.md`（人设）、`skills.registry.md`（清单本体）、`preset/tools.patch.yml`（工具行）。README 徽章记 `PROMPT.md` 的行数与字数；技能条目数看构建输出的 `技能登记表：N 条`；`tools.patch.yml` 的行数变了，README 里「工具集」那句说明也要跟着看一遍。
 
 ---
 
@@ -229,20 +232,41 @@ node -e "console.log(require('fs').statSync('PROMPT.md').size,'字节')"
 
 ## 八、改完过一遍
 
-- [ ] `node preset/build-preset.mjs` 通过（人设逐字节回验 OK）
-- [ ] `PROMPT.md` 与嵌入的 prefix 一致（脚本已保证；仍建议独立解析一次）
+- [ ] `node preset/build-preset.mjs` 通过（「PROMPT.md + skills.registry.md」逐字节回验 OK）
+- [ ] 注入后的提示词与嵌入的 prefix 一致，且 **§8 仍是最后一节**（脚本已保证；仍建议独立解析一次）
 - [ ] `preset/cordis.patch.yml` 没被手工改过（`git diff` 里只有生成结果的变化）
 - [ ] 安装后三条校验（bundle 在册 / 行 active / Config 有 `preset-luzzy`）全过
 - [ ] 本仓库目录若被移动 / 更名过：已按第三节顺序「卸载 → 移动 → 从新路径重装」，且 `package.json` 与 `pnpm-lock.yaml` 里搜不到旧路径
 - [ ] 界面若还红着旧路径的 `包元信息错误`：已刷新确认是缓存残留（`list_bundles` 正常即不是装坏）
 - [ ] 新会话里能选到 Luzzy，人设生效
 - [ ] README 数字实测更新；描述与 topics 口径一致
-- [ ] 技能清单若有变动：条目里的 stars / 许可已重测，且逐条过了 `PROMPT.md` §6 的收录标准
+- [ ] 技能清单若有变动：只改了 `skills.registry.md`（`PROMPT.md` 的注入区没被手改），条目里的 stars / 许可已重测，且逐条过了 `PROMPT.md` §6 的收录标准
 - [ ] 仓库内搜一遍旧名 / 旧机制残留（`LuzzyPrompt`、`.agent-presets`、`sync-persona`）
 - [ ] 没有临时文件、没有密钥形态字符串（`sk-` / `ghp_` / `Bearer`）
 
 ---
 
-## 九、给 Agent 的一句话
+## 九、v2.0 路线图（预留，未实现）
 
-**人设只有一个真源，预设只是它的搬运工。** 想改鹿溪，改 `PROMPT.md` 然后重跑脚本；想改他能用的工具，改 `tools.patch.yml`；想改 DSH 里怎么装、怎么选，那是 DSH 的事——先读官方 skill，再动本仓库。
+下面这些是 v2.1.0 期间定下的**未来能力**——现在不实现、**不进每轮流程**。记在这里是为了不忘掉，也为了将来动手时知道当初为什么这么想。
+
+**多文件拆分**（前提：目标 Harness 支持多文件组合加载）：
+
+| 层 | 打算装什么 | 现在在哪 |
+| --- | --- | --- |
+| **Persona Layer** | 人设、语气、颜文字、行为协议 | `PROMPT.md` §1 |
+| **Cognition Layer** | 思考路径、规则优先级、任务分级、Recovery | `PROMPT.md` §8 |
+| **Runtime Adapter** | 具体 harness 的工具映射与通道约束 | `PROMPT.md` §2 / §3 / §6 里的工具相关段 |
+| **Skill Registry** | 技能登记表 | **已外置**：`skills.registry.md` |
+
+**Decision Log：**
+
+- 2026-09-30 · **Skill Registry 先拆**——它是四层里唯一不需要 Harness 改动就能落地的一步（一个文件 + 构建期注入），所以先做。
+- 2026-09-30 · **其余三层暂不拆**：DSH 的 persona 目前只吃单段 `prefix`，拆开只能靠构建期拼接，运行时不产生任何隔离收益，不抵复杂度。等 Harness 支持多文件组合加载再说。
+- 2026-09-30 · **Decision Log 不写进 `PROMPT.md`**——它是维护记录，不是 agent 每轮要读的规则。
+
+---
+
+## 十、给 Agent 的一句话
+
+**每份数据只有一个真源：人设在 `PROMPT.md`、清单在 `skills.registry.md`、工具在 `tools.patch.yml`，构建脚本是它们唯一的搬运工。** 想改鹿溪，改 `PROMPT.md` 然后重跑脚本；想改技能来源，改 `skills.registry.md`；想改他能用的工具，改 `tools.patch.yml`；想改 DSH 里怎么装、怎么选，那是 DSH 的事——先读官方 skill，再动本仓库。

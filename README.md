@@ -8,7 +8,7 @@
 懒——太阳晒在身上的那种懒。但懒底下竖着一根很细的神经。
 
 [![License](https://img.shields.io/badge/license-MIT-2ea44f?style=flat-square)](LICENSE)
-[![Prompt](https://img.shields.io/badge/%E6%8F%90%E7%A4%BA%E8%AF%8D-462_%E8%A1%8C_%C2%B7_17.7k_%E5%AD%97-8250df?style=flat-square)](PROMPT.md)
+[![Prompt](https://img.shields.io/badge/%E6%8F%90%E7%A4%BA%E8%AF%8D-477_%E8%A1%8C_%C2%B7_15.8k_%E5%AD%97-8250df?style=flat-square)](PROMPT.md)
 [![Preset](https://img.shields.io/badge/DSH_%E9%A2%84%E8%AE%BE-%E5%8F%AF%E7%9B%B4%E6%8E%A5%E5%AE%89%E8%A3%85-0969da?style=flat-square)](preset/)
 [![Tools](https://img.shields.io/badge/%E5%B7%A5%E5%85%B7%E9%9B%86-standard_%E5%90%8C%E6%AC%BE-1f883d?style=flat-square)](preset/tools.patch.yml)
 [![Verify](https://img.shields.io/badge/%E5%B5%8C%E5%85%A5%E5%9B%9E%E9%AA%8C-%E9%80%90%E5%AD%97%E8%8A%82%E4%B8%80%E8%87%B4-8957e5?style=flat-square)](preset/build-preset.mjs)
@@ -22,15 +22,16 @@
 ```bash
 git clone git@github.com:LuzzyMeow/Luzzy-DSH-Prompt.git
 
-cat Luzzy-DSH-Prompt/PROMPT.md     # 提示词正文：直接当 system prompt 用
-ls  Luzzy-DSH-Prompt/preset/       # DSH 预设：装进 DeepSeek Harness 里选用
+cat Luzzy-DSH-Prompt/PROMPT.md            # 人设 + 规则正文
+cat Luzzy-DSH-Prompt/skills.registry.md   # 技能清单本体：构建时注入 PROMPT.md §6
+ls  Luzzy-DSH-Prompt/preset/              # DSH 预设：装进 DeepSeek Harness 里选用
 ```
 
 两条路各走各的，互不依赖：
 
 | 你想干什么 | 用哪个 | 怎么用 |
 | --- | --- | --- |
-| 在任意 harness 里要这个语气 | `PROMPT.md` | 整份注入 system prompt；它是自洽的，不需要别的东西 |
+| 在任意 harness 里要这个语气 | `PROMPT.md` + `skills.registry.md` | 两份合起来注入 system prompt（清单落在 §6 的位置）；只注入 `PROMPT.md` 也能跑，清单那段留空即是 |
 | 在 DSH 里多一个叫 **Luzzy** 的预设 | `preset/` | 让 DSH Agent 用 `plugin_manager` 安装本目录，新会话里选它 |
 
 > 装 DSH 预设的完整流程、校验与坑位，见 [AGENTS.md](AGENTS.md)；只想用提示词的话，读 `PROMPT.md` 就够了。
@@ -54,18 +55,18 @@ ls  Luzzy-DSH-Prompt/preset/       # DSH 预设：装进 DeepSeek Harness 里选
 
 ## 这份提示词长什么样
 
-`PROMPT.md` 是完整的人设 + 行为规范，462 行，八个部分（**§8 固定思考路径永远垫底**，新增内容一律插在它之前）：
+`PROMPT.md` 是完整的人设 + 行为规范，477 行，八个部分（**§8 固定思考路径永远垫底**，新增内容一律插在它之前）；技能清单的本体在 [`skills.registry.md`](skills.registry.md)，由构建脚本注入 §6：
 
 | 节 | 内容 |
 | --- | --- |
 | **§1 你是谁** | 外貌 / 性格 / 思维 / 语气 · 颜文字白名单 · 行为协议（陪人的那一面）· 做事协议（干活的那一面）· 硬性禁忌 |
 | **§2 GitHub 仓库操作** | 一律优先 SSH；`gh repo rename` 这类命令会把 remote 改回 HTTPS，执行后立刻核验；国内网络受限时的镜像降级次序 |
-| **§3 联网检索** | 判据在前、工具名在后——「这个动作的目的是找到我手里还没有地址的东西吗？」是就走检索通道，并写明降级与留痕规则 |
+| **§3 联网检索** | 授权检索层（当前实现 AnySearch）：判据在前、工具名在后——「这个动作的目的是找到我手里还没有地址的东西吗？」是就走检索层，并写明降级与留痕规则 |
 | **§4 澄清提问** | 阻塞式 / 优化式 / 豁免三档；单次最多 3 问；优先结构化提问；获答后复述确认立刻推进 |
-| **§5 记忆系统** | 何时检索、何时写入、写入格式、记忆安全四步判断；未挂载就说「记忆能力不可用」再干别的 |
-| **§6 技能清单** | 收录标准（开源 + 高 stars + 确有 SKILL）· 五类仓库来源 + 本仓库自指 + 本机子智能体 / 团队 · 在线抓取 · 命中即全量加载（不可跳过的前置闸门）· 自更新 · 自查 · 兜底与留痕 |
+| **§5 记忆系统** | 何时检索、何时写入、写入格式、记忆安全五步判断（含矛盾检测）；未挂载就说「记忆能力不可用」再干别的 |
+| **§6 技能清单** | 收录标准（开源 + 高 stars + 确有 SKILL）· 清单本体在 `skills.registry.md`（构建注入）· Progressive Skill Loading：必读不得跳过、跳过必须写明原因 · 在线抓取 · 自更新 · 自查 · 兜底与留痕 |
 | **§7 工作区规范** | 临时文件必删、不留无主文件、分类摆放、交付留痕、收尾自查 |
-| **§8 固定思考路径** | 永远垫底的总纲：五个 Phase（理解 → 拆解 → 多路径 → 执行 → 验证）＋推理姿态；§1–§7 的规则各自落在某个 Phase，入口必过、深度随题浮动 |
+| **§8 固定思考路径** | 永远垫底的总纲：规则优先级（P0–P4）· 任务分级（L0–L3）· 五个 Phase（理解 → 拆解 → 多路径 → 执行 → 验证）· Recovery Mode（触发式重新规划）· 推理姿态；§1–§7 的规则各自落在某个 Phase |
 
 > 提示词里的工具名（`web_search`、`search_memory`……）是**写法示例**：能对上的就用，对不上的按同一条判据找本机对应工具。它约束的是动作性质，不是工具名。
 
@@ -108,9 +109,10 @@ preset/
 
 ```
 Luzzy-DSH-Prompt/
-├── PROMPT.md              人设提示词正文 —— 唯一真源
+├── PROMPT.md              人设提示词正文 —— 唯一真源（§6 留技能清单注入区）
+├── skills.registry.md     技能清单本体 —— 构建时注入 PROMPT.md §6
 ├── preset/                DSH 预设 bundle（可直接安装）
-├── AGENTS.md              维护指南：当前官方 DSH 的预设怎么改、怎么加、什么不许动
+├── AGENTS.md              维护指南：怎么改、什么不许动 + v2.0 路线图
 ├── README.md
 ├── LICENSE                MIT
 └── .gitattributes         全仓库 LF
@@ -118,11 +120,11 @@ Luzzy-DSH-Prompt/
 
 ## 维护
 
-改人设只有一条路，且不会漂移：
+改人设、改技能来源各只有一条路，且不会漂移：
 
 ```bash
-# 1) 改 PROMPT.md（唯一真源）
-# 2) 重新生成预设声明，脚本会把嵌入结果解析回来逐字节比对
+# 1) 改人设 → PROMPT.md；改技能清单 → skills.registry.md
+# 2) 重新生成：脚本先把清单注入 PROMPT.md §6，再嵌入预设并逐字节回验
 node preset/build-preset.mjs
 # 3) 重新安装 preset/，再开新会话
 ```
@@ -140,6 +142,7 @@ node -e "const t=require('fs').readFileSync('PROMPT.md','utf8');console.log([...
 
 | 版本 | 日期 | 说明 |
 | --- | --- | --- |
+| **v2.1.0** | 2026-09-30 | 从「单文件 Prompt」升级为 **Agent Runtime Specification**：新增规则优先级（P0–P4）与任务分级（L0–L3）；技能加载改为**渐进式 Progressive Skill Loading**（必读不得跳过、跳过必须写明原因）；技能清单外置到 `skills.registry.md` 并由构建注入；检索抽象为**授权检索层**（当前实现 AnySearch）；记忆判断升到五步（含矛盾检测）；新增触发式 **Recovery Mode**；§1「无条件响应」补上 P0 边界。 |
 | **v2.0.0** | 2026-09-29 | 仓库更名为 **Luzzy-DSH-Prompt**，内容**完全替换**：旧版《综合智能体行为契约》及其 skill / evals 已整体移除，提交历史一并清空。本版为鹿溪人设提示词 + 可直接安装的 DSH 预设，并新增 `AGENTS.md` 维护指南。 |
 
 ## 许可

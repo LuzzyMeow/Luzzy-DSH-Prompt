@@ -6,8 +6,11 @@
  *
  * 约定（改之前先读 AGENTS.md 第三节）：
  *   - PROMPT.md 是人设的唯一真源；本脚本是它进入 YAML 的唯一通道。
+ *   - skills.registry.md（仓库根）是技能清单的本体：本脚本把它注入 PROMPT.md §6 的
+ *     SKILL-REGISTRY 区块——注入只发生在内存里，不回写 PROMPT.md。
  *   - cordis.patch.yml 由本脚本生成，**不要手工编辑**（手改会让下次生成产生无法比对的 diff）。
- *   - 生成后立刻回验：把 YAML 块标量解析回来，与 PROMPT.md 逐字节比对；不一致就报错退出 1，并保留旧文件。
+ *   - 生成后立刻回验：把 YAML 块标量解析回来，与「注入后的 PROMPT.md」逐字节比对；
+ *     不一致就报错退出 1，并保留旧文件。
  *
  * 退出码：0 = 生成且回验通过；1 = 校验或回验失败（不写文件）。
  */
@@ -19,6 +22,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 const PROMPT = path.join(root, "PROMPT.md");
+const REGISTRY = path.join(root, "skills.registry.md");
 const TOOLS = path.join(here, "tools.patch.yml");
 const OUT = path.join(here, "cordis.patch.yml");
 
@@ -71,6 +75,36 @@ function readTools() {
     fail(`tools.patch.yml 第 ${at} 行不是 10 空格缩进（插件行必须嵌在 config.plugins 下）：${JSON.stringify(rows[badLine])}`);
   }
   return text;
+}
+
+function readRegistry() {
+  if (!fs.existsSync(REGISTRY)) fail(`找不到 ${REGISTRY}`);
+  const raw = fs.readFileSync(REGISTRY, "utf8");
+  if (raw.includes("\r\n")) {
+    console.warn("[build-preset] skills.registry.md 含 CRLF，已按 LF 规整");
+  }
+  const lf = raw.replace(/\r\n/g, "\n").replace(/\n+$/, "");
+  if (!lf.trim()) fail("skills.registry.md 是空的");
+  const bad = lf.split("\n").findIndex((line) => /\{\{[^}]*\}\}/.test(line));
+  if (bad !== -1) {
+    fail(`skills.registry.md 第 ${bad + 1} 行含双花括号变量语法，DSH 会当作 prompt 变量解析；占位符请写 \${...}`);
+  }
+  return lf;
+}
+
+/**
+ * 把 registry 正文注入 PROMPT.md 的 SKILL-REGISTRY 区块（只在内存里，不回写源文件）。
+ * 区块位于 §6 之内，所以注入后 §8 仍是全文最后一节。
+ */
+function injectRegistry(prompt, registry) {
+  const BEGIN = "<!-- SKILL-REGISTRY:BEGIN -->";
+  const END = "<!-- SKILL-REGISTRY:END -->";
+  const start = prompt.indexOf(BEGIN);
+  const stop = prompt.indexOf(END);
+  if (start === -1 || stop === -1 || stop < start) {
+    fail("PROMPT.md 里找不到 SKILL-REGISTRY:BEGIN / END 区块（技能清单的注入点）");
+  }
+  return `${prompt.slice(0, start + BEGIN.length)}\n${registry}\n${prompt.slice(stop)}`;
 }
 
 function render(prompt, tools) {
@@ -136,23 +170,27 @@ function readBackPrefix(yamlText) {
 }
 
 const prompt = readPrompt();
+const registry = readRegistry();
 const tools = readTools();
-const yamlText = render(prompt, tools);
+const rendered = injectRegistry(prompt, registry);
+const yamlText = render(rendered, tools);
 
 const back = readBackPrefix(yamlText);
-if (back !== prompt) {
-  const a = prompt.split("\n");
+if (back !== rendered) {
+  const a = rendered.split("\n");
   const b = back.split("\n");
   const at = a.findIndex((line, i) => line !== b[i]);
-  fail(`回验失败：第 ${at + 1} 行不一致\n  PROMPT.md : ${JSON.stringify(a[at])}\n  YAML 侧   : ${JSON.stringify(b[at])}`);
+  fail(`回验失败：第 ${at + 1} 行不一致\n  注入后的 PROMPT.md : ${JSON.stringify(a[at])}\n  YAML 侧            : ${JSON.stringify(b[at])}`);
 }
 
 const previous = fs.existsSync(OUT) ? fs.readFileSync(OUT, "utf8") : null;
 fs.writeFileSync(OUT, yamlText, "utf8");
 
-const lines = prompt.split("\n").length;
+const lines = rendered.split("\n").length;
 const rows = (tools.match(/^ {10}- id: /gm) || []).length;
+const entries = (registry.match(/^\d+\.\d+ `/gm) || []).length;
 console.log(`[build-preset] 已生成 ${path.relative(root, OUT)}`);
-console.log(`[build-preset] 人设回验通过：${lines} 行 / ${[...prompt].length} 字，与 PROMPT.md 逐字节一致`);
+console.log(`[build-preset] 人设回验通过：${lines} 行 / ${[...rendered].length} 字，与「PROMPT.md + skills.registry.md」逐字节一致`);
+console.log(`[build-preset] 技能登记表：${entries} 条（来自 skills.registry.md）`);
 console.log(`[build-preset] 工具行：${rows} 条（persona 之外，来自 tools.patch.yml）`);
 console.log(`[build-preset] 相对上一版：${previous === yamlText ? "无变化" : previous === null ? "首次生成" : "有变化"}`);
