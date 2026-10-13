@@ -8,9 +8,9 @@
 
 ## 一、仓库是什么
 
-- **`PROMPT.md`** —— 鹿溪人设提示词，455 行。**§8 固定思考路径永远垫底，新增内容一律插在它之前。**用户给定的原文，**非用户明确要求不要改写**。
+- **`PROMPT.md`** —— 鹿溪人设提示词，495 行。**§9 固定思考路径永远垫底，新增内容一律插在它之前。**用户给定的原文，**非用户明确要求不要改写**。
 - **`skills.registry.md`** —— 技能清单（Skill Registry）的本体，71 行。§6 的清单由 `build-preset.mjs` 从这里注入 `PROMPT.md` 的 `SKILL-REGISTRY` 区块；加载协议、分类规则、收录标准仍写在 `PROMPT.md` §6。
-- **`PROMPT.full.md`** —— **构建产物**（522 行）：上面两份合成后的完整提示词，自洽、可直接当 system prompt 用。它专治「非 DSH 环境拿到 `PROMPT.md` 会发现 §6 清单是空的」——**对外给这份，不要给源文件**。
+- **`PROMPT.full.md`** —— **构建产物**（562 行）：上面两份合成后的完整提示词，自洽、可直接当 system prompt 用。它专治「非 DSH 环境拿到 `PROMPT.md` 会发现 §6 清单是空的」——**对外给这份，不要给源文件**。
 - **`preset/`** —— 把这个仓库装进 DeepSeek Harness（DSH）的预设 bundle：一条 `@deepseek-ai/dsh-agent-preset` 声明行 + 18 条工具行（取自 DSH 自带 `standard` 预设）。
 - **关系**：人设住在 `PROMPT.md`、技能清单住在 `skills.registry.md`，构建脚本把两者合成完整提示词（落一份 `PROMPT.full.md`），预设负责把它送进 DSH 的 prompt 装配链。每份数据只有一个真源，产物一律由脚本生成。
 
@@ -26,22 +26,22 @@
 
 ```yaml
 - insert:
-    - id: preset-luzzy                              # Loader 行 id，惯例 preset-<id>
-      name: '@deepseek-ai/dsh-agent-preset'         # 声明插件
+    - id: preset-luzzy # Loader 行 id，惯例 preset-<id>
+      name: '@deepseek-ai/dsh-agent-preset' # 声明插件
       config:
-        id: luzzy                                   # 会话保存的 preset 标识符（必填）
-        name: Luzzy                                 # 展示名
-        description: …                              # 预设列表里的说明
-        order: 10                                   # 列表排序
-        plugins: [ … ]                              # 必填：子插件行列表
+        id: luzzy # 会话保存的 preset 标识符（必填）
+        name: Luzzy # 展示名
+        description: … # 预设列表里的说明
+        order: 10 # 列表排序
+        plugins: […] # 必填：子插件行列表
 ```
 
-| 角色 | 包 / 服务 | 说明 |
-| --- | --- | --- |
-| 声明 | `@deepseek-ai/dsh-agent-preset` | 只声明子插件，不拥有 Agent；改声明只影响之后新建的 Agent |
-| 注册表 | `@deepseek-ai/dsh-agent-preset-registry` | 服务 `ctx.agentPresets`：`list` / `resolve` / `readDocument` / `mount` / `recompose` / `compositionInventory` 等；管预设代际与释放 |
-| 人设 | `@deepseek-ai/dsh-persona` | 字段 `prefix`（**必填**，人设段落，order 0）/ `suffix`（默认 `''`，空即遮蔽全局后缀）/ `complete`（默认 `false`，true = 只用渲染后的前缀当系统提示词）/ `includeRuntimeContext`（默认 `true`，false 抑制该作用域的全部 runtime-context） |
-| 界面 | `@deepseek-ai/dsh-client-ui-agent-preset` | 预设选择器 |
+| 角色   | 包 / 服务                                 | 说明                                                                                                                                                                                                                                     |
+| ------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 声明   | `@deepseek-ai/dsh-agent-preset`           | 只声明子插件，不拥有 Agent；改声明只影响之后新建的 Agent                                                                                                                                                                                 |
+| 注册表 | `@deepseek-ai/dsh-agent-preset-registry`  | 服务 `ctx.agentPresets`：`list` / `resolve` / `readDocument` / `mount` / `recompose` / `compositionInventory` 等；管预设代际与释放                                                                                                       |
+| 人设   | `@deepseek-ai/dsh-persona`                | 字段 `prefix`（**必填**，人设段落，order 0）/ `suffix`（默认 `''`，空即遮蔽全局后缀）/ `complete`（默认 `false`，true = 只用渲染后的前缀当系统提示词）/ `includeRuntimeContext`（默认 `true`，false 抑制该作用域的全部 runtime-context） |
+| 界面   | `@deepseek-ai/dsh-client-ui-agent-preset` | 预设选择器                                                                                                                                                                                                                               |
 
 **人设行只能挂在 preset 内**：`dsh-system-prompt` 自己持有部署级人设，`@deepseek-ai/dsh-persona` 在 agent scope 之外挂载会与它相撞并明确报错。
 
@@ -57,21 +57,27 @@ Desktop 里这些文件在 `app.asar` 内部，shell 打不开。两条读法：
 ```js
 // node asar-peek.mjs  用法：ASAR=<app.asar> FILTER=presets/ node asar-peek.mjs
 import fs from 'node:fs';
-const asar = process.env.ASAR, filter = process.env.FILTER ?? '';
+const asar = process.env.ASAR,
+  filter = process.env.FILTER ?? '';
 const fd = fs.openSync(asar, 'r');
-const size = Buffer.alloc(8); fs.readSync(fd, size, 0, 8, 0);
+const size = Buffer.alloc(8);
+fs.readSync(fd, size, 0, 8, 0);
 const headerSize = size.readUInt32LE(4);
-const head = Buffer.alloc(headerSize); fs.readSync(fd, head, 0, headerSize, 8);
+const head = Buffer.alloc(headerSize);
+fs.readSync(fd, head, 0, headerSize, 8);
 const json = head.toString('utf8', 8, 8 + head.readUInt32LE(4));
 const base = 8 + headerSize;
-const files = []; (function walk(node, prefix) {
+const files = [];
+(function walk(node, prefix) {
   for (const [name, e] of Object.entries(node.files ?? {})) {
     const p = prefix ? `${prefix}/${name}` : name;
-    if (e.files) walk(e, p); else files.push({ p, size: e.size, offset: Number(e.offset) });
+    if (e.files) walk(e, p);
+    else files.push({ p, size: e.size, offset: Number(e.offset) });
   }
 })(JSON.parse(json.slice(0, json.lastIndexOf('}') + 1)), '');
 for (const f of files.filter((f) => f.p.includes(filter))) {
-  const buf = Buffer.alloc(f.size); fs.readSync(fd, buf, 0, f.size, base + f.offset);
+  const buf = Buffer.alloc(f.size);
+  fs.readSync(fd, buf, 0, f.size, base + f.offset);
   console.log(`\n===== ${f.p} =====\n${buf.toString('utf8')}`);
 }
 ```
@@ -82,11 +88,11 @@ for (const f of files.filter((f) => f.p.includes(filter))) {
 
 若在别的机器上遇到它，按这个映射迁移（然后删掉旧目录）：
 
-| 旧 | 新 |
-| --- | --- |
-| 目录名 | `config.id` |
-| `preset.yml` 的 `name` / `description` / `order` | 同名字段 |
-| `agent.cordis.yml` 的插件条目 | `config.plugins` **逐条照搬**，但每个包名都要核对是否还存在（改过名的包会在激活时失败） |
+| 旧                                               | 新                                                                                      |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| 目录名                                           | `config.id`                                                                             |
+| `preset.yml` 的 `name` / `description` / `order` | 同名字段                                                                                |
+| `agent.cordis.yml` 的插件条目                    | `config.plugins` **逐条照搬**，但每个包名都要核对是否还存在（改过名的包会在激活时失败） |
 
 ---
 
@@ -109,11 +115,11 @@ plugin_manager · action: install_bundle · target: <本仓库 preset/ 的绝对
 
 **校验**（三步都过才算装好）：
 
-| 看什么 | 怎么验 | 通过的样子 |
-| --- | --- | --- |
-| bundle 在册 | `plugin_manager` `list_bundles` | 列表里出现本 bundle |
-| 行已激活 | `plugin_manager` `list_plugins` | `preset-luzzy` 行 active；激活失败会留在名册上带诊断信息 |
-| 配置合法 | `cordis_inspect_query` → host `Config` → `listConfigs`，`name=@deepseek-ai/dsh-agent-preset` | 出现 `include:preset-luzzy`，`status: schema` |
+| 看什么      | 怎么验                                                                                       | 通过的样子                                               |
+| ----------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| bundle 在册 | `plugin_manager` `list_bundles`                                                              | 列表里出现本 bundle                                      |
+| 行已激活    | `plugin_manager` `list_plugins`                                                              | `preset-luzzy` 行 active；激活失败会留在名册上带诊断信息 |
+| 配置合法    | `cordis_inspect_query` → host `Config` → `listConfigs`，`name=@deepseek-ai/dsh-agent-preset` | 出现 `include:preset-luzzy`，`status: schema`            |
 
 **生效时机**：只对**新建会话**生效。已存在的会话与它的子代理保持启动时的插件修订——验证改动必须开新会话，别在老会话里下结论。
 
@@ -162,22 +168,22 @@ Get-Item "$p\node_modules\@local\dsh-luzzy-preset" -Force | Select-Object LinkTy
 
 ## 四、禁忌与坑（都踩过）
 
-| 坑 | 后果 | 规矩 |
-| --- | --- | --- |
-| `PROMPT.md` 里出现双花括号变量语法 | DSH 把 persona 前缀当模板渲染，`{{…}}` 会被当 prompt 变量解析；变量名不合法**整个预设加载失败** | 占位符统一写 `${...}`；`build-preset.mjs` 已前置拦截并退出 1 |
-| 手改 `cordis.patch.yml` | 下次生成产生无法比对的 diff，人设真源被架空 | 只改 `PROMPT.md`、`skills.registry.md` 与 `tools.patch.yml`，其余重跑脚本 |
-| 手改 `PROMPT.md` 的 `SKILL-REGISTRY` 注入区 | 下次构建会把改动冲掉，技能清单出现两份真源 | 清单只改 `skills.registry.md`；注入区是构建落点，不是编辑位 |
-| 手改 `PROMPT.full.md` | 它是产物，下次构建直接覆盖，改动无声消失 | 改人设改 `PROMPT.md`、改清单改 `skills.registry.md`，然后重跑脚本 |
-| CRLF 行尾 | 逐字节回验在第 1 行就失败 | 全仓库 LF（`.gitattributes` 钉 `eol=lf`）；脚本仍会兜底规整并告警 |
-| 重复 `config.id` | 声明加载失败，预设不进名册 | 加预设前先确认 id 未被占用 |
-| 改了预设就在当前会话里试 | 老会话不会更新，白白怀疑改动无效 | 开新会话验证 |
-| **直接移动 / 更名仓库目录** | 预设是 `link:` 挂载的，junction 悬空 → 插件页报 `包元信息错误 … ENOENT`，预设失效 | 先 `remove_bundle` → 移动 → 从新路径 `install_bundle` → 刷新界面；判据见第三节末 |
-| 拿界面上的旧报错当当前状态 | 缓存住的失败信息会误导排查方向 | 以 `list_bundles` / junction 指向 / `package.json` 为准 |
-| 同一条规则写两处 | 迟早漂移，且没人知道该信哪份 | README / AGENTS 只**描述**，不复述 `PROMPT.md` 的规则 |
-| 把新内容加到 §8「固定思考路径」之后 | 它是收束全部规则的总纲，排到后面等于把总纲埋掉 | `PROMPT.md` 增删一律插在 §8 之前；§8 永远是最后一节，且新增的规则要在某个 Phase 里留下落点 |
-| `git push --force` | 覆盖远端历史 | 除仓库整体替换那一次外禁用；需要时先确认 |
-| 临时文件留在仓库里 | 无主文件进版本库 | 本轮产物本轮清 |
-| 硬编码密钥 / 令牌 | 公开仓库泄露 | 绝不；文档里的占位符写法不算 |
+| 坑                                          | 后果                                                                                            | 规矩                                                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `PROMPT.md` 里出现双花括号变量语法          | DSH 把 persona 前缀当模板渲染，`{{…}}` 会被当 prompt 变量解析；变量名不合法**整个预设加载失败** | 占位符统一写 `${...}`；`build-preset.mjs` 已前置拦截并退出 1                               |
+| 手改 `cordis.patch.yml`                     | 下次生成产生无法比对的 diff，人设真源被架空                                                     | 只改 `PROMPT.md`、`skills.registry.md` 与 `tools.patch.yml`，其余重跑脚本                  |
+| 手改 `PROMPT.md` 的 `SKILL-REGISTRY` 注入区 | 下次构建会把改动冲掉，技能清单出现两份真源                                                      | 清单只改 `skills.registry.md`；注入区是构建落点，不是编辑位                                |
+| 手改 `PROMPT.full.md`                       | 它是产物，下次构建直接覆盖，改动无声消失                                                        | 改人设改 `PROMPT.md`、改清单改 `skills.registry.md`，然后重跑脚本                          |
+| CRLF 行尾                                   | 逐字节回验在第 1 行就失败                                                                       | 全仓库 LF（`.gitattributes` 钉 `eol=lf`）；脚本仍会兜底规整并告警                          |
+| 重复 `config.id`                            | 声明加载失败，预设不进名册                                                                      | 加预设前先确认 id 未被占用                                                                 |
+| 改了预设就在当前会话里试                    | 老会话不会更新，白白怀疑改动无效                                                                | 开新会话验证                                                                               |
+| **直接移动 / 更名仓库目录**                 | 预设是 `link:` 挂载的，junction 悬空 → 插件页报 `包元信息错误 … ENOENT`，预设失效               | 先 `remove_bundle` → 移动 → 从新路径 `install_bundle` → 刷新界面；判据见第三节末           |
+| 拿界面上的旧报错当当前状态                  | 缓存住的失败信息会误导排查方向                                                                  | 以 `list_bundles` / junction 指向 / `package.json` 为准                                    |
+| 同一条规则写两处                            | 迟早漂移，且没人知道该信哪份                                                                    | README / AGENTS 只**描述**，不复述 `PROMPT.md` 的规则                                      |
+| 把新内容加到 §9「固定思考路径」之后         | 它是收束全部规则的总纲，排到后面等于把总纲埋掉                                                  | `PROMPT.md` 增删一律插在 §9 之前；§9 永远是最后一节，且新增的规则要在某个 Phase 里留下落点 |
+| `git push --force`                          | 覆盖远端历史                                                                                    | 除仓库整体替换那一次外禁用；需要时先确认                                                   |
+| 临时文件留在仓库里                          | 无主文件进版本库                                                                                | 本轮产物本轮清                                                                             |
+| 硬编码密钥 / 令牌                           | 公开仓库泄露                                                                                    | 绝不；文档里的占位符写法不算                                                               |
 
 ---
 
@@ -236,7 +242,7 @@ node -e "console.log(require('fs').statSync('PROMPT.md').size,'字节')"
 ## 八、改完过一遍
 
 - [ ] `node preset/build-preset.mjs` 通过（「PROMPT.md + skills.registry.md」逐字节回验 OK）
-- [ ] 注入后的提示词与嵌入的 prefix 一致，且 **§8 仍是最后一节**（脚本已保证；仍建议独立解析一次）
+- [ ] 注入后的提示词与嵌入的 prefix 一致，且 **§9 仍是最后一节**（脚本已保证；仍建议独立解析一次）
 - [ ] `PROMPT.full.md` 与 `cordis.patch.yml` 的 prefix 内容一致，且不含 `SKILL-REGISTRY` 构建标记
 - [ ] `preset/cordis.patch.yml` 没被手工改过（`git diff` 里只有生成结果的变化）
 - [ ] 安装后三条校验（bundle 在册 / 行 active / Config 有 `preset-luzzy`）全过
@@ -256,18 +262,19 @@ node -e "console.log(require('fs').statSync('PROMPT.md').size,'字节')"
 
 **多文件拆分**（前提：目标 Harness 支持多文件组合加载）：
 
-| 层 | 打算装什么 | 现在在哪 |
-| --- | --- | --- |
-| **Persona Layer** | 人设、外貌、语气、颜文字、硬性禁忌 | `PROMPT.md` §1 |
-| **Cognition Layer** | 思考路径、规则优先级、任务分级、Recovery | `PROMPT.md` §8 |
-| **Runtime Adapter** | 具体 harness 的工具映射与通道约束 | `PROMPT.md` §2 / §3 / §6 里的工具相关段 |
-| **Skill Registry** | 技能登记表 | **已外置**：`skills.registry.md` |
+| 层                  | 打算装什么                               | 现在在哪                                |
+| ------------------- | ---------------------------------------- | --------------------------------------- |
+| **Persona Layer**   | 人设、外貌、语气、颜文字、硬性禁忌       | `PROMPT.md` §1                          |
+| **Cognition Layer** | 思考路径、规则优先级、任务分级、Recovery | `PROMPT.md` §9                          |
+| **Runtime Adapter** | 具体 harness 的工具映射、通道约束与自身文档 | `PROMPT.md` §2 / §3 / §6 / §7           |
+| **Skill Registry**  | 技能登记表                               | **已外置**：`skills.registry.md`        |
 
 **Decision Log：**
 
 - 2026-09-30 · **Skill Registry 先拆**——它是四层里唯一不需要 Harness 改动就能落地的一步（一个文件 + 构建期注入），所以先做。
 - 2026-09-30 · **其余三层暂不拆**：DSH 的 persona 目前只吃单段 `prefix`，拆开只能靠构建期拼接，运行时不产生任何隔离收益，不抵复杂度。等 Harness 支持多文件组合加载再说。
 - 2026-09-30 · **Decision Log 不写进 `PROMPT.md`**——它是维护记录，不是 agent 每轮要读的规则。
+- 2026-10-11 · **新增 §7「DSH 本身」**：官方文档站地址、随安装出货的插件开发规范、环境事实三样写进提示词——这些是每轮都可能要用的当前环境事实，不是长期记忆，所以放提示词而不是记忆系统；原 §7 / §8 顺延为 §8 / §9，交叉引用同步改。
 
 ---
 
